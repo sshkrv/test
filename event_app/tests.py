@@ -2,6 +2,89 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
+from .models import Event
+
+
+class TestEvent(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client.force_authenticate(user=self.user)
+        start_date = timezone.now() + timedelta(days=1)
+        self.event = Event.objects.create(
+            creator=self.user,
+            title='Test Event',
+            description='Test Description',
+            date=start_date,
+            type='Test Type',
+            status='Test Status',
+            capacity=10
+        )
+
+    def test_create_event(self):
+        self.client.login(username='testuser', password='testpass')
+
+        start_date = timezone.now() + timedelta(hours=2)
+
+        data = {
+            'creator': self.user.id,
+            'title': 'Test Event 2',
+            'description': 'Test Description 2',
+            'date': start_date,
+            'type': 'Test Type 2',
+            'status': 'Test Status 2',
+            'capacity': 20
+        }
+        url = reverse('event-list')
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertEqual(Event.objects.get(title='Test Event 2').title, 'Test Event 2')
+
+    def test_list_own_events(self):
+        self.client.login(username='testuser', password='testpass')
+        url = reverse('event-list')
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_get_event_detail(self):
+        self.client.login(username='testuser', password='testpass')
+        url = reverse('event-detail', kwargs={'pk': self.event.pk})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'Test Event')
+
+    def test_register_event(self):
+        self.client.login(username='testuser', password='testpass')
+        url = reverse('event-register')
+        response = self.client.post(url, {'event_id': self.event.id}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(User.objects.get(username='testuser') in Event.objects.get(id=self.event.id).attendees.all())
+
+    def test_unregister_event(self):
+        self.client.login(username='testuser', password='testpass')
+        self.event.attendees.add(self.user)
+        url = reverse('event-register') + '?event_id=' + str(self.event.id)
+        response = self.client.delete(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(User.objects.get(username='testuser') in Event.objects.get(id=self.event.id).attendees.all())
+
+    def test_event_capacity(self):
+        self.client.login(username='testuser', password='testpass')
+        url = reverse('event-register')
+        self.event.capacity = 1
+        self.event.save()
+        self.event.attendees.add(User.objects.create_user(username='testuser2', password='testpass2'))
+
+        response = self.client.post(url, {'event_id': self.event.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestUser(APITestCase):
@@ -46,4 +129,5 @@ class TestUser(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 

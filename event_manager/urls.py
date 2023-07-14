@@ -1,6 +1,7 @@
-from django.urls import path, re_path
+from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from event_app.views import UserRegisterView, UserLoginView
+from event_app.views import UserRegisterView, UserLoginView, EventListView, EventDetailView,\
+    AllEventListView, EventRegisterView
 # Import drf_yasg components
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -16,7 +17,7 @@ schema_view = get_schema_view(
         license=openapi.License(name="Sabir's license"),
     ),
     public=True,
-    permission_classes=(permissions.AllowAny,),
+    permission_classes=(permissions.AllowAny,)
 )
 
 urlpatterns = [
@@ -25,6 +26,11 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('events/', EventListView.as_view(), name='event-list'),
+    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('allevents/', AllEventListView.as_view(), name='all-event-list'),
+    path('register_event/', EventRegisterView.as_view(), name='event-register'),
+
     path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
