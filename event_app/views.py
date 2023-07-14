@@ -15,6 +15,13 @@ from event_app.models import Event
 
 
 class EventListView(ListCreateAPIView):
+    """
+        get:
+        Return a list of all events created by the current user.
+
+        post:
+        Create a new event instance for the current user.
+    """
     serializer_class = EventSerializer
 
     def get_queryset(self):
@@ -26,6 +33,16 @@ class EventListView(ListCreateAPIView):
 
 
 class EventDetailView(RetrieveUpdateDestroyAPIView):
+    """
+        get:
+        Retrieve a detailed view of an event created by the current user.
+
+        put:
+        Update an event created by the current user.
+
+        delete:
+        Delete an event created by the current user.
+    """
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -38,11 +55,22 @@ class EventDetailView(RetrieveUpdateDestroyAPIView):
 
 
 class AllEventListView(ListAPIView):
+    """
+        get:
+        Retrieve a list of all events, regardless of creator.
+    """
     serializer_class = EventSerializer
     queryset = Event.objects.all()
 
 
 class EventRegisterView(APIView):
+    """
+        post:
+        Register the current user for a specific event.
+
+        delete:
+        Unregister the current user from a specific event.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(request_body=openapi.Schema(
@@ -85,6 +113,10 @@ class EventRegisterView(APIView):
 
 
 class UserRegisterView(APIView):
+    """
+        post:
+        Register a new user.
+    """
     serializer_class = UserRegisterSerializer
 
     @swagger_auto_schema(request_body=UserRegisterSerializer)
@@ -103,6 +135,10 @@ class UserRegisterView(APIView):
 
 
 class UserLoginView(APIView):
+    """
+        post:
+        Log in an existing user.
+    """
     serializer_class = UserLoginSerializer
 
     @swagger_auto_schema(request_body=UserLoginSerializer)
