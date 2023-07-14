@@ -19,7 +19,10 @@ class EventListView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Event.objects.filter(creator=user)
+        if user.is_authenticated:
+            return Event.objects.filter(creator=user)
+        else:
+            return Event.objects.none()
 
 
 class EventDetailView(RetrieveUpdateDestroyAPIView):
@@ -28,7 +31,10 @@ class EventDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Event.objects.filter(creator=user)
+        if user.is_authenticated:
+            return Event.objects.filter(creator=user)
+        else:
+            return Event.objects.none()
 
 
 class AllEventListView(ListAPIView):
